@@ -8,7 +8,7 @@ namespace Ruddy\FileSystem\Drivers;
  * @author Nick Vlug <nick@ruddy.nl> & Gil Nimer <gil@ruddy.nl>
  */
 
-class Direct
+class Direct implements IDriver
 {
     /**
      * Store file handler
