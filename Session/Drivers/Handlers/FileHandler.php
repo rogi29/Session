@@ -30,7 +30,7 @@ class FileHandler implements \SessionHandlerInterface
      */
     public function __construct()
     {
-        $this->direct = new \Ruddy\FileSystem\Drivers\Direct();
+        $this->direct = new \Ruddy\Session\Files\Direct();
     }
 
     /**

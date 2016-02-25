@@ -10,8 +10,6 @@ namespace Ruddy\Session\Drivers;
 
 class File extends Handlers\FileHandler
 {
-    const time = 2;
-
     /**
      * @var null|string
      */
