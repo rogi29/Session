@@ -95,7 +95,7 @@ class FileHandler implements \SessionHandlerInterface
      */
     public function gc($maxlifetime)
     {
-        foreach (glob("{$this->savePath}/sess_*") as $file) {
+        foreach (glob("{$this->savePath}/{$this->prefix}_*") as $file) {
             if (filemtime($file) + $maxlifetime < time() && file_exists($file)) {
                 unlink($file);
             }

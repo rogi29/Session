@@ -1,6 +1,7 @@
 <?php
 
 namespace Ruddy\Session\Drivers\Handlers;
+use Ruddy\DAO\DAO;
 
 /**
  * Ruddy Framework Session
@@ -18,7 +19,7 @@ class SQLHandler implements \SessionHandlerInterface
     /**
      * @var null
      */
-    private $savePath = null;
+    private $table = null;
 
     /**
      * @var array
@@ -35,32 +36,53 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function __construct()
     {
-
+        $this->sql = new DAO();
     }
 
     /**
      * Connect Database
      *
+     * @param $driver
      * @param $host
      * @param $database
      * @param $username
      * @param $password
-     * @param $secDriver
      * @param null $port
      */
-    protected function connect($host, $database, $username, $password, $secDriver, $port = null)
+    public function connect($driver, $host, $database, $username, $password, $port)
     {
-        if($this->sql != false)
-            $this->sql->connect($host, $database, $username, $password, $secDriver, $port);
+        if($this->sql != false) {
+            try {
+                $this->sql->connect($driver, $host, $database, $username, $password, $port);
+            } catch(\PDOException $e){
+                die('Error!:'. $e);
+            }
+        }
     }
 
     /**
-     * @param string $savePath
+     * @param string $table
      * @param string $sessionName
      * @return bool
      */
-    public function open($savePath, $sessionName)
+    public function open($table, $sessionName)
     {
+        $this->table = $table;
+
+        $query = "
+        CREATE TABLE IF NOT EXISTS {$table} (
+        id varchar(32) NOT NULL PRIMARY KEY,
+        access int(10) unsigned DEFAULT NULL,
+        data LONGTEXT
+        )
+        ";
+
+        $this->sql->prepare($query);
+        try {
+            $this->sql->execute();
+        } catch(\PDOException $e) {
+            echo $e->getMessage();
+        }
         return true;
     }
 
@@ -69,6 +91,7 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function close()
     {
+        $this->sql->disconnect();
         return true;
     }
 
@@ -78,7 +101,15 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function read($id)
     {
-        return true;
+        $this->sql->prepare("SELECT data FROM {$this->table} WHERE id = :id");
+        $this->sql->bind(':id', $id);
+
+        if($this->sql->execute()){
+            $row = $this->sql->fetch();
+            return $row['data'];
+        }
+
+        return '';
     }
 
     /**
@@ -88,7 +119,17 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function write($id, $data)
     {
-        return true;
+        $access = time();
+        $this->sql->prepare("REPLACE INTO {$this->table} (id, access, data) VALUES (:id, :access, :data)");
+        $this->sql->bind(':id', $id);
+        $this->sql->bind(':access', $access);
+        $this->sql->bind(':data', $data);
+
+        if($this->sql->execute()){
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -97,7 +138,14 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function destroy($id)
     {
-        return true;
+        $this->sql->prepare("DELETE FROM {$this->table} WHERE id = :id");
+        $this->sql->bind(':id', $id);
+
+        if($this->sql->execute()){
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -106,6 +154,15 @@ class SQLHandler implements \SessionHandlerInterface
      */
     public function gc($maxlifetime)
     {
-        return true;
+        $oldTime = time() - $maxlifetime;
+
+        $this->sql->prepare("DELETE * FROM {$this->table} WHERE access < :oldTime");
+        $this->sql->bind(':oldTime', $oldTime);
+
+        if($this->sql->execute()){
+            return true;
+        }
+
+        return false;
     }
 } 

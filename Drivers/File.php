@@ -37,8 +37,8 @@ class File extends Handlers\FileHandler
     {
         if($name != null) self::$name = $name;
         $this->_key     = ($key == null) ? substr(md5($name),0,24) : $key;
-        $this->_path = $path;
-        $this->prefix = $prefix;
+        $this->_path    = $path;
+        $this->prefix   = $prefix;
 
         $this->_cookie = [
             'lifetime' => 0,
