@@ -98,7 +98,7 @@ class Session
         if(is_null($this->driver) && $this->strDriver != 'SQL'){
             return false;
         }
-        return $this->driver->connect($driver, $host, $database, $username, $password, $port);
+        return $this->driver->connSQL($driver, $host, $database, $username, $password, $port);
     }
 
     /**
